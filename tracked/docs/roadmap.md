@@ -21,12 +21,15 @@
 
 ## Geprüft (26.11.2026)
 - Zeitpunkte der Töne in allen 3 Varianten gemessen (Stillephasen mit ffmpeg): stimmen.
-- Pegel: Start -8 dB, Erinnerung -19,5 dB, Ende -9 dB.
+- Pegel: Start -8 dB, Erinnerung -22 dB (bis v2: -19,5 dB), Ende -9 dB.
+- Erinnerung seit v3 tiefer: Grundton 347 Hz statt 520 Hz (Christoph 26.11.2026: „etwas leiser, tiefere Klangschale“). Start- und Schlusston bleiben bei 520 Hz. Im Browser gemessen.
+- Knöpfe (alle 3 Starts, Stopp, „zuletzt gewählt“) in Chrome durchgeklickt: laufen.
+- Akku/Wärme (Christophs Eindruck nach dem Probelauf): Im Code kein Stromfresser gefunden. Gemessen in Chrome am Mac: Audio erzeugen 80 ms, ein Timer-Schritt 0,003 ms, Browser-Last beim Abspielen wie im Ruhezustand (rund 6 %). Am iPhone selbst nicht gemessen.
 
 ## Offen
 - [ ] Test auf dem iPhone: läuft der Ton bei gesperrtem Bildschirm aus der Startbildschirm-App weiter? Plan B: Bildschirm bleibt schwarz an (Wake Lock).
-- [ ] Klang und Lautstärke nach dem ersten echten Durchgang anpassen.
-- [ ] Knöpfe im Browser einmal durchklicken (26.11. nicht geprüft, Test-Browser war belegt).
+- [ ] Akku/Wärme: am iPhone unter Einstellungen > Batterie nachsehen, wie viel Prozent die App (oder Safari) nach einem Durchgang zeigt und ob „Bildschirm an“ oder „Hintergrund“ dabeisteht. Erst danach etwas umbauen.
+- [ ] Neue Erinnerungstöne (v3, leiser und tiefer) auf dem iPhone anhören: noch hörbar über den Lautsprecher?
 - [ ] Timer-Schrift-Helligkeit (26.11. heller gemacht) auf dem iPhone bestätigen.
 
 ## Hinweis
@@ -38,6 +41,7 @@ Der Ordner wurde aus der alten Vorlage `ai-os-main` angelegt (englische CLAUDE.m
 
 ## Letzte Session
 - 26.11.2026 (Session 1): Grilling, Web-App gebaut, Töne gemessen, Repo + GitHub Pages live, Timer-Schrift heller (v2). Details: Archiv, Session 1.
+- 26.11.2026 (Session 2): Akku-Frage geprüft (kein Stromfresser im Code), Erinnerungstöne leiser und tiefer (v3), Knöpfe durchgeklickt. Details: Archiv, Session 2.
 
 ## Letzte Übergabe
 ```

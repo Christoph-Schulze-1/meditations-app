@@ -66,11 +66,12 @@ const END_GAP_S = 4;           // Abstand der drei Schlusstöne
 const TAIL_S = 6;              // Nachklang nach dem letzten Ton
 
 const VOL_START = 0.45;
-const VOL_REMINDER = 0.12;     // sehr leise
+const VOL_REMINDER = 0.09;     // sehr leise
 const VOL_END = [0.40, 0.36, 0.32];
 
 // Kurze Klangschale: unharmonische Teiltöne, schnelles Ausklingen.
 const F0 = 520;
+const F0_REMINDER = 347;      // Erinnerung: tiefere Schale (eine Quinte unter F0)
 const PARTIALS = [            // [Verhältnis, Lautstärke, Abklingzeit in s]
   [1.00, 1.00, 0.90],
   [2.71, 0.45, 0.55],
@@ -79,7 +80,7 @@ const PARTIALS = [            // [Verhältnis, Lautstärke, Abklingzeit in s]
 ];
 const STRIKE_LEN_S = 3.0;
 
-function addStrike(buf, startS, vol) {
+function addStrike(buf, startS, vol, f0 = F0) {
   const start = Math.round(startS * SR);
   const len = Math.round(STRIKE_LEN_S * SR);
   const attack = Math.round(0.004 * SR);
@@ -87,7 +88,7 @@ function addStrike(buf, startS, vol) {
     const t = i / SR;
     let v = 0;
     for (const [ratio, amp, tau] of PARTIALS) {
-      const f = F0 * ratio;
+      const f = f0 * ratio;
       const env = Math.exp(-t / tau);
       // zwei leicht verstimmte Sinus für das typische Schweben
       v += amp * env * 0.5 * (Math.sin(2 * Math.PI * f * t) + Math.sin(2 * Math.PI * (f + 1.1) * t));
@@ -109,7 +110,7 @@ function buildSession(breathMin) {
   const samples = new Int16Array(Math.ceil(totalS * SR));
   if (breathMin > 0) addStrike(samples, LEAD_IN, VOL_START); // Start Atmen
   addStrike(samples, medStart, VOL_START);                    // Ende Atmen = Start Meditation
-  reminders.forEach(r => addStrike(samples, r, VOL_REMINDER));
+  reminders.forEach(r => addStrike(samples, r, VOL_REMINDER, F0_REMINDER));
   for (let k = 0; k < END_STRIKES; k++) addStrike(samples, endS + k * END_GAP_S, VOL_END[k]);
 
   return { blob: wavBlob(samples), medStart, endS, totalS };
