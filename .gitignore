@@ -1,0 +1,19 @@
+# AI workflow files
+local-only/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
