@@ -1,58 +1,30 @@
-# [Project Name] Roadmap
+# Meditations-App Roadmap
 
-**Core Stack**: TBD  
-**Mode**: TBD  
-**Phase**: Phase 0, Discovery  
-**Date**: YYYY-MM-DD  
-**Status**: Initial planning
+**Stack**: eine Web-App (HTML + JavaScript, ohne fremde Pakete), Ordner `docs/`, GitHub Pages
+**Stand**: 26.11.2026, erste Fassung gebaut, Test auf dem iPhone offen
+**Nur für Christoph privat.** Eigener Code, nichts aus der TM-App übernommen.
 
-## Project Goal
-- [Describe the primary goal of the project in 1 to 3 bullets]
+## Ziel
+- Optional 2 oder 5 Minuten Atmen (nur Ton am Anfang und Ende), dann 20 Minuten Meditation.
+- Um Minute 5, 10 und 15 ein sehr leiser, kurzer Klangschalen-Ton (je bis 1 Minute zufällig versetzt), damit Christoph zurückkommt, wenn er in Gedanken ist.
+- Ende: 3 kurze Klangschalen-Töne.
 
-## Requirements Sources
-- `clients/`
+## Entscheidungen (Grilling 26.11.2026)
+- Web-App statt echter iPhone-App: läuft dauerhaft ohne Entwicklerkonto und ohne Neu-Aufspielen.
+- Signal nur als leiser Ton (Augen sind zu, Web-Apps können auf dem iPhone nicht vibrieren).
+- iPhone darf sich sperren: Die ganze Sitzung wird beim Tippen als EINE Audiodatei (WAV, 16 kHz, 39-49 MB im Speicher) erzeugt und abgespielt.
+- Atemübung ohne Führung, nur Start- und Endton.
+- Erinnerung leicht versetzt, nicht genau alle 5 Minuten.
+- Klang: sehr kurze Klangschale, am Computer erzeugt (keine fremden Klänge).
+- Ort: GitHub Pages.
 
-## Phase 0: Discovery
-- [ ] clarify goals, constraints, and stakeholders
-- [ ] identify project mode and starting phase
-- [ ] identify stack constraints or confirm open stack selection
-- [ ] define expected output for the first phase
+## Geprüft (26.11.2026)
+- Zeitpunkte der Töne in allen 3 Varianten gemessen (Stillephasen mit ffmpeg): stimmen.
+- Pegel: Start -8 dB, Erinnerung -19,5 dB, Ende -9 dB.
 
-## Phase 1: Scope and Decisions
-- [ ] define scope boundaries
-- [ ] confirm success criteria
-- [ ] confirm architecture direction
-- [ ] confirm verification strategy
+## Offen
+- [ ] Test auf dem iPhone: läuft der Ton bei gesperrtem Bildschirm aus der Startbildschirm-App weiter? Plan B: Bildschirm bleibt schwarz an (Wake Lock).
+- [ ] Klang und Lautstärke nach dem ersten echten Durchgang anpassen.
 
-## Phase 2: Clickdummy / Prototype
-- [ ] define user flows
-- [ ] define screens or views
-- [ ] create prototype or clickdummy if required
-- [ ] collect feedback and decisions
-
-## Phase 3: Architecture and Setup
-- [ ] define module boundaries
-- [ ] define data flow and core interfaces
-- [ ] define environment and deployment approach
-- [ ] define testing approach
-
-## Phase 4: MVP Implementation
-- [ ] implement core features
-- [ ] add or update tests for core logic
-- [ ] keep scope disciplined
-- [ ] verify key flows
-
-## Phase 5: Hardening / QA / Security
-- [ ] review regression risk
-- [ ] review security-sensitive areas
-- [ ] verify logging and error handling
-- [ ] run final verification
-
-## Phase 6: Launch / Handover / Next Iteration
-- [ ] confirm release readiness
-- [ ] document key decisions
-- [ ] define next iteration priorities
-
-## Collaboration Notes
-- Keep a short current-state snapshot here when ending a meaningful session.
-- Note decisions, open questions, and the most relevant next step.
+## Hinweis
+Der Ordner wurde aus der alten Vorlage `ai-os-main` angelegt (englische CLAUDE.md, Skill-Kopien in `local-only/`), nicht aus `ai-os-christoph`.

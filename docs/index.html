@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meditation">
+<title>Meditation</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: #000; color: #9aa3ab;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom); user-select: none; }
+  .screen { display: none; width: 100%; max-width: 360px; flex-direction: column; gap: 16px; align-items: stretch; }
+  .screen.active { display: flex; }
+  h1 { font-weight: 300; font-size: 22px; letter-spacing: .04em; text-align: center; margin: 0 0 24px; color: #c4ccd3; }
+  button { font: inherit; font-size: 19px; padding: 22px; border-radius: 18px; border: 1px solid #22282e;
+    background: #0d1013; color: #c4ccd3; }
+  button.last { border-color: #4a5a68; }
+  button:active { background: #161b20; }
+  .hint { text-align: center; font-size: 13px; color: #4b535a; margin-top: 8px; line-height: 1.5; }
+  #phase { text-align: center; font-size: 15px; color: #3a4148; letter-spacing: .06em; }
+  #time { text-align: center; font-size: 44px; font-weight: 200; color: #2a3036; font-variant-numeric: tabular-nums; margin-bottom: 40px; }
+  #stop { background: transparent; border-color: #1a1f24; color: #3a4148; font-size: 16px; padding: 14px; }
+  #error { color: #b07a6a; }
+</style>
+</head>
+<body>
+
+<section id="start" class="screen active">
+  <h1>Meditation</h1>
+  <button data-breath="0">Ohne Atmen</button>
+  <button data-breath="2">2 Min Atmen</button>
+  <button data-breath="5">5 Min Atmen</button>
+  <p class="hint">Danach 20 Minuten Meditation.<br>Das iPhone darf sich sperren.</p>
+  <p class="hint" id="error" hidden></p>
+</section>
+
+<section id="run" class="screen">
+  <div id="phase"></div>
+  <div id="time"></div>
+  <button id="stop">Stopp</button>
+</section>
+
+<audio id="player" preload="auto" playsinline></audio>
+
+<script>
+"use strict";
+
+// ---- Einstellungen ----
+const SR = 16000;              // Abtastrate der Audiodatei (Hz)
+const LEAD_IN = 3;             // Sekunden Stille vor dem ersten Ton
+const MEDITATION_MIN = 20;
+const REMINDERS_MIN = [5, 10, 15];
+const JITTER_S = 60;           // Erinnerung bis zu 60 s früher oder später
+const END_STRIKES = 3;
+const END_GAP_S = 4;           // Abstand der drei Schlusstöne
+const TAIL_S = 6;              // Nachklang nach dem letzten Ton
+
+const VOL_START = 0.45;
+const VOL_REMINDER = 0.12;     // sehr leise
+const VOL_END = [0.40, 0.36, 0.32];
+
+// Kurze Klangschale: unharmonische Teiltöne, schnelles Ausklingen.
+const F0 = 520;
+const PARTIALS = [            // [Verhältnis, Lautstärke, Abklingzeit in s]
+  [1.00, 1.00, 0.90],
+  [2.71, 0.45, 0.55],
+  [5.15, 0.20, 0.30],
+  [8.17, 0.08, 0.18],
+];
+const STRIKE_LEN_S = 3.0;
+
+function addStrike(buf, startS, vol) {
+  const start = Math.round(startS * SR);
+  const len = Math.round(STRIKE_LEN_S * SR);
+  const attack = Math.round(0.004 * SR);
+  for (let i = 0; i < len && start + i < buf.length; i++) {
+    const t = i / SR;
+    let v = 0;
+    for (const [ratio, amp, tau] of PARTIALS) {
+      const f = F0 * ratio;
+      const env = Math.exp(-t / tau);
+      // zwei leicht verstimmte Sinus für das typische Schweben
+      v += amp * env * 0.5 * (Math.sin(2 * Math.PI * f * t) + Math.sin(2 * Math.PI * (f + 1.1) * t));
+    }
+    if (i < attack) v *= i / attack;
+    if (i > len - SR * 0.2) v *= (len - i) / (SR * 0.2); // weich auf null
+    const s = buf[start + i] + Math.round(v * vol * 0.55 * 32767);
+    buf[start + i] = Math.max(-32768, Math.min(32767, s));
+  }
+}
+
+function buildSession(breathMin) {
+  const breathS = breathMin * 60;
+  const medStart = LEAD_IN + breathS;
+  const reminders = REMINDERS_MIN.map(m => medStart + m * 60 + (Math.random() * 2 - 1) * JITTER_S);
+  const endS = medStart + MEDITATION_MIN * 60;
+  const totalS = endS + (END_STRIKES - 1) * END_GAP_S + TAIL_S;
+
+  const samples = new Int16Array(Math.ceil(totalS * SR));
+  if (breathMin > 0) addStrike(samples, LEAD_IN, VOL_START); // Start Atmen
+  addStrike(samples, medStart, VOL_START);                    // Ende Atmen = Start Meditation
+  reminders.forEach(r => addStrike(samples, r, VOL_REMINDER));
+  for (let k = 0; k < END_STRIKES; k++) addStrike(samples, endS + k * END_GAP_S, VOL_END[k]);
+
+  return { blob: wavBlob(samples), medStart, endS, totalS };
+}
+
+function wavBlob(samples) {
+  const header = new ArrayBuffer(44);
+  const d = new DataView(header);
+  const dataLen = samples.length * 2;
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) d.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); d.setUint32(4, 36 + dataLen, true); w(8, "WAVE");
+  w(12, "fmt "); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+  d.setUint32(24, SR, true); d.setUint32(28, SR * 2, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true);
+  w(36, "data"); d.setUint32(40, dataLen, true);
+  return new Blob([header, samples.buffer], { type: "audio/wav" });
+}
+
+// ---- Oberfläche ----
+const $ = id => document.getElementById(id);
+const player = $("player");
+let session = null, url = null, ticker = null;
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
+}
+
+function markLast() {
+  const last = localStorage.getItem("breath") ?? "0";
+  document.querySelectorAll("[data-breath]").forEach(b => b.classList.toggle("last", b.dataset.breath === last));
+}
+
+function fmt(s) {
+  s = Math.max(0, Math.ceil(s));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+function tick() {
+  if (!session) return;
+  const t = player.currentTime;
+  if (t < session.medStart) {
+    $("phase").textContent = session.medStart > LEAD_IN + 1 ? "Atmen" : "Gleich geht es los";
+    $("time").textContent = fmt(session.medStart - t);
+  } else if (t < session.endS) {
+    $("phase").textContent = "Meditation";
+    $("time").textContent = fmt(session.endS - t);
+  } else {
+    $("phase").textContent = "Fertig";
+    $("time").textContent = "";
+  }
+}
+
+function reset() {
+  clearInterval(ticker);
+  player.pause();
+  player.removeAttribute("src");
+  player.load();
+  if (url) URL.revokeObjectURL(url);
+  url = null; session = null;
+  if ("mediaSession" in navigator) navigator.mediaSession.metadata = null;
+  markLast();
+  show("start");
+}
+
+async function begin(breathMin) {
+  $("error").hidden = true;
+  localStorage.setItem("breath", String(breathMin));
+  session = buildSession(breathMin);
+  url = URL.createObjectURL(session.blob);
+  player.src = url;
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: "Meditation",
+      artist: breathMin ? breathMin + " Min Atmen + 20 Min" : "20 Min",
+    });
+  }
+  try {
+    await player.play();
+  } catch (e) {
+    $("error").textContent = "Ton konnte nicht starten: " + e.message;
+    reset();
+    $("error").hidden = false;
+    return;
+  }
+  show("run");
+  tick();
+  ticker = setInterval(tick, 500);
+}
+
+document.querySelectorAll("[data-breath]").forEach(b =>
+  b.addEventListener("click", () => begin(Number(b.dataset.breath))));
+$("stop").addEventListener("click", reset);
+player.addEventListener("ended", reset);
+markLast();
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
