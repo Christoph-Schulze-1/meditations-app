@@ -1,6 +1,6 @@
 // Speichert die App auf dem iPhone, damit sie offline läuft.
 // Bei jeder Änderung an den Dateien VERSION erhöhen.
-const VERSION = "v1";
+const VERSION = "v2";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
