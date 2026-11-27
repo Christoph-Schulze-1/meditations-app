@@ -18,3 +18,21 @@ Volle Historie, wird nur ergänzt, nie gekürzt.
 - Erinnerungstöne auf Christophs Wunsch leiser und tiefer: `VOL_REMINDER` 0,12 → 0,09 (gemessen -22 dB statt -19,5 dB), eigener Grundton `F0_REMINDER` 347 Hz (vorher 520 Hz). Start- und Schlusston unverändert (520 Hz, -8 / -9 dB). sw VERSION v3.
 - Knöpfe in Chrome durchgeklickt: alle 3 Starts, Stopp und die Markierung „zuletzt gewählt“ laufen.
 - Fortsetzung 27.11.2026, Christophs Wunsch: Erinnerungstöne „deutlich tiefer“ (`F0_REMINDER` 347 → 260 Hz, Pegel -22,2 dB). Neu: 3 Minuten Entspannen nach der Meditation (`REST_MIN`). Meditation endet mit 2 Tönen (`MED_END_STRIKES`), das Entspannen mit 3 Tönen (`REST_END_STRIKES`). Anzeige: Phase „Entspannen“ mit Restzeit. Im Browser gemessen (alle 3 Varianten): Töne bei Minute 20,00 / 20,07 und 23,00 / 23,07 / 23,13 ab Meditationsstart, Datei 42,6 / 46,3 / 51,8 MB, Dauer ohne Atmen 23,28 min. sw VERSION v4.
+- Live-Prüfung 27.11.2026: `sw.js` auf GitHub Pages zeigt VERSION v4, `index.html` enthält `REST_MIN = 3`, `F0_REMINDER = 260` und „Entspannen“ (per curl gelesen).
+- Messweg für Töne (ohne ffmpeg): `docs/index.html` per `file://` in Chrome öffnen, `buildSession(n)` aufrufen, die WAV-Daten ab Byte 44 als Int16 lesen, je Ton Spitzenpegel und Grundton (Goertzel, 150-700 Hz) bestimmen. Gegenprobe an der alten Live-Fassung v2 ergab -19,5 dB und 520 Hz, wie in Session 1 mit ffmpeg gemessen.
+- Akku-Frage bleibt offen: Christoph hat die Zahl aus Einstellungen > Batterie noch nicht genannt. Nichts umgebaut.
+- Handover 27.11.2026: Roadmap bereinigt (Stand-Zeile, Dateigröße 39-49 MB → 43-52 MB, „Letzte Session“ auf diese Session gekürzt). Projekt als privat auf die Ausschlussliste des Routers gesetzt (stand dort als „Zeile fehlt“). Memory-Ordner bleibt leer: alles Dauerhafte steht in der Roadmap.
+- Ersetzter Übergabe-Block aus Session 1 (wörtlich):
+```
+Übergabe aus der Session vom 26.11.2026 (Meditations App):
+Woran wir waren: Meditations-Web-App gebaut und live: https://christoph-schulze-1.github.io/meditations-app/
+(Ordner docs/, eine Datei index.html mit Audio-Erzeugung, sw.js für offline). Timer-Schrift heller (sw VERSION v2).
+Zuerst lesen: tracked/docs/roadmap.md
+Als Nächstes / offen:
+- iPhone-Test: „Ohne Atmen“, iPhone sperren, kommt die leise Erinnerung um Minute 5 (±1)? Sonst Plan B Wake Lock.
+- Helligkeit der Timer-Schrift auf dem iPhone bestätigen.
+- Klang/Lautstärke nach erstem Durchgang anpassen.
+- Knöpfe im Browser einmal durchklicken.
+Prüfer: Tonzeitpunkte und Pegel mit ffmpeg/Python gemessen (stimmen); Seite und alle Dateien HTTP 200. Knöpfe und Sperrbildschirm: ungeprüft.
+Hinweis: Repo öffentlich (GitHub Free), nichts Privates hineinschreiben.
+```
