@@ -40,7 +40,7 @@
   <button data-breath="0">Ohne Atmen</button>
   <button data-breath="2">2 Min Atmen</button>
   <button data-breath="5">5 Min Atmen</button>
-  <p class="hint">Danach 20 Minuten Meditation.<br>Das iPhone darf sich sperren.</p>
+  <p class="hint">Danach 20 Minuten Meditation<br>und 3 Minuten Entspannen.<br>Das iPhone darf sich sperren.</p>
   <p class="hint" id="error" hidden></p>
 </section>
 
@@ -61,8 +61,10 @@ const LEAD_IN = 3;             // Sekunden Stille vor dem ersten Ton
 const MEDITATION_MIN = 20;
 const REMINDERS_MIN = [5, 10, 15];
 const JITTER_S = 60;           // Erinnerung bis zu 60 s früher oder später
-const END_STRIKES = 3;
-const END_GAP_S = 4;           // Abstand der drei Schlusstöne
+const REST_MIN = 3;            // Entspannen nach der Meditation
+const MED_END_STRIKES = 2;     // Töne am Ende der Meditation
+const REST_END_STRIKES = 3;    // Töne am Ende des Entspannens
+const END_GAP_S = 4;           // Abstand der Schlusstöne
 const TAIL_S = 6;              // Nachklang nach dem letzten Ton
 
 const VOL_START = 0.45;
@@ -71,7 +73,7 @@ const VOL_END = [0.40, 0.36, 0.32];
 
 // Kurze Klangschale: unharmonische Teiltöne, schnelles Ausklingen.
 const F0 = 520;
-const F0_REMINDER = 347;      // Erinnerung: tiefere Schale (eine Quinte unter F0)
+const F0_REMINDER = 260;      // Erinnerung: tiefere Schale (eine Oktave unter F0)
 const PARTIALS = [            // [Verhältnis, Lautstärke, Abklingzeit in s]
   [1.00, 1.00, 0.90],
   [2.71, 0.45, 0.55],
@@ -105,15 +107,17 @@ function buildSession(breathMin) {
   const medStart = LEAD_IN + breathS;
   const reminders = REMINDERS_MIN.map(m => medStart + m * 60 + (Math.random() * 2 - 1) * JITTER_S);
   const endS = medStart + MEDITATION_MIN * 60;
-  const totalS = endS + (END_STRIKES - 1) * END_GAP_S + TAIL_S;
+  const restEndS = endS + REST_MIN * 60;
+  const totalS = restEndS + (REST_END_STRIKES - 1) * END_GAP_S + TAIL_S;
 
   const samples = new Int16Array(Math.ceil(totalS * SR));
   if (breathMin > 0) addStrike(samples, LEAD_IN, VOL_START); // Start Atmen
   addStrike(samples, medStart, VOL_START);                    // Ende Atmen = Start Meditation
   reminders.forEach(r => addStrike(samples, r, VOL_REMINDER, F0_REMINDER));
-  for (let k = 0; k < END_STRIKES; k++) addStrike(samples, endS + k * END_GAP_S, VOL_END[k]);
+  for (let k = 0; k < MED_END_STRIKES; k++) addStrike(samples, endS + k * END_GAP_S, VOL_END[k]);          // Ende Meditation
+  for (let k = 0; k < REST_END_STRIKES; k++) addStrike(samples, restEndS + k * END_GAP_S, VOL_END[k]);     // Ende Entspannen
 
-  return { blob: wavBlob(samples), medStart, endS, totalS };
+  return { blob: wavBlob(samples), medStart, endS, restEndS, totalS };
 }
 
 function wavBlob(samples) {
@@ -156,6 +160,9 @@ function tick() {
   } else if (t < session.endS) {
     $("phase").textContent = "Meditation";
     $("time").textContent = fmt(session.endS - t);
+  } else if (t < session.restEndS) {
+    $("phase").textContent = "Entspannen";
+    $("time").textContent = fmt(session.restEndS - t);
   } else {
     $("phase").textContent = "Fertig";
     $("time").textContent = "";
@@ -183,7 +190,7 @@ async function begin(breathMin) {
   if ("mediaSession" in navigator) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: "Meditation",
-      artist: breathMin ? breathMin + " Min Atmen + 20 Min" : "20 Min",
+      artist: breathMin ? breathMin + " Min Atmen + 20 Min + 3 Min" : "20 Min + 3 Min",
     });
   }
   try {
